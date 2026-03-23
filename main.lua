@@ -81,7 +81,7 @@ task.spawn(function()
 end)
 
 -- =========================
--- UI
+-- UI SYSTEM
 -- =========================
 task.spawn(function()
 
@@ -94,13 +94,16 @@ task.spawn(function()
     local main = Instance.new("Frame", gui)
     main.Size = UDim2.new(0, 560, 0, 360)
     main.Position = UDim2.new(0.5,-280,0.5,-180)
-    main.BackgroundColor3 = Color3.fromRGB(17,17,17)
+    main.BackgroundColor3 = Color3.fromRGB(18,18,18)
     main.Active = true
+
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
 
     -- TOPBAR
     local top = Instance.new("Frame", main)
     top.Size = UDim2.new(1,0,0,45)
-    top.BackgroundColor3 = Color3.fromRGB(22,22,22)
+    top.BackgroundColor3 = Color3.fromRGB(24,24,24)
+    Instance.new("UICorner", top).CornerRadius = UDim.new(0,12)
 
     local title = Instance.new("TextLabel", top)
     title.Size = UDim2.new(1,0,1,0)
@@ -113,38 +116,66 @@ task.spawn(function()
     -- MINIMIZE
     local min = Instance.new("TextButton", top)
     min.Size = UDim2.new(0,40,1,0)
-    min.Position = UDim2.new(1,-40,0,0)
+    min.Position = UDim2.new(1,-45,0,0)
     min.Text = "-"
     min.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    Instance.new("UICorner", min).CornerRadius = UDim.new(1,0)
 
-    local open = true
+    local minimized = false
+
+    local function setVisible(state)
+        for _,v in pairs(main:GetChildren()) do
+            if v ~= top then
+                v.Visible = state
+            end
+        end
+    end
+
     min.MouseButton1Click:Connect(function()
-        open = not open
-        TweenService:Create(main, TweenInfo.new(0.25), {
-            Size = open and UDim2.new(0,560,0,360) or UDim2.new(0,560,0,45)
-        }):Play()
-    end)
+        minimized = not minimized
 
-    -- DRAG
-    local drag, start, pos
-    top.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            drag = true
-            start = i.Position
-            pos = main.Position
+        if minimized then
+            setVisible(false)
+            TweenService:Create(main, TweenInfo.new(0.3), {
+                Size = UDim2.new(0,560,0,45)
+            }):Play()
+        else
+            setVisible(true)
+            TweenService:Create(main, TweenInfo.new(0.3), {
+                Size = UDim2.new(0,560,0,360)
+            }):Play()
         end
     end)
 
-    UIS.InputChanged:Connect(function(i)
-        if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
-            local d = i.Position - start
-            main.Position = UDim2.new(pos.X.Scale,pos.X.Offset+d.X,pos.Y.Scale,pos.Y.Offset+d.Y)
+    -- DRAG SYSTEM (SUAVE)
+    local dragging = false
+    local dragStart, startPos
+
+    top.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = main.Position
         end
     end)
 
-    UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            drag = false
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            TweenService:Create(main, TweenInfo.new(0.05), {
+                Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            }):Play()
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
         end
     end)
 
@@ -152,15 +183,16 @@ task.spawn(function()
     local side = Instance.new("Frame", main)
     side.Size = UDim2.new(0,140,1,-45)
     side.Position = UDim2.new(0,0,0,45)
-    side.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    side.BackgroundColor3 = Color3.fromRGB(22,22,22)
+    Instance.new("UICorner", side).CornerRadius = UDim.new(0,12)
 
+    -- CONTENT
     local content = Instance.new("Frame", main)
     content.Size = UDim2.new(1,-140,1,-45)
     content.Position = UDim2.new(0,140,0,45)
     content.BackgroundTransparency = 1
 
     local tabs = {}
-    local selected
 
     local function createTab(name, y)
         local btn = Instance.new("TextButton", side)
@@ -168,11 +200,11 @@ task.spawn(function()
         btn.Position = UDim2.new(0,0,0,y)
         btn.Text = "   "..name
         btn.TextXAlignment = Enum.TextXAlignment.Left
-        btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+        btn.BackgroundColor3 = Color3.fromRGB(22,22,22)
         btn.TextColor3 = Color3.fromRGB(150,150,150)
 
         local indicator = Instance.new("Frame", btn)
-        indicator.Size = UDim2.new(0,3,1,0)
+        indicator.Size = UDim2.new(0,4,1,0)
         indicator.BackgroundColor3 = Color3.fromRGB(0,255,170)
         indicator.Visible = false
 
@@ -184,21 +216,20 @@ task.spawn(function()
         tabs[name] = frame
 
         btn.MouseButton1Click:Connect(function()
-            for n,f in pairs(tabs) do
-                f.Visible = false
-            end
+            for n,f in pairs(tabs) do f.Visible = false end
+
             for _,b in pairs(side:GetChildren()) do
                 if b:IsA("TextButton") then
                     b.TextColor3 = Color3.fromRGB(150,150,150)
-                    if b:FindFirstChildOfClass("Frame") then
-                        b:FindFirstChildOfClass("Frame").Visible = false
+                    if b:FindFirstChild("Frame") then
+                        b.Frame.Visible = false
                     end
                 end
             end
 
             frame.Visible = true
             indicator.Visible = true
-            btn.TextColor3 = Color3.fromRGB(255,255,255)
+            btn.TextColor3 = Color3.new(1,1,1)
         end)
 
         return frame
@@ -210,12 +241,13 @@ task.spawn(function()
 
     tabs["Main"].Visible = true
 
-    -- CARD + TOGGLE
+    -- TOGGLE (PRO)
     local function createToggle(parent, text, y)
         local card = Instance.new("Frame", parent)
         card.Size = UDim2.new(0.9,0,0,50)
         card.Position = UDim2.new(0.05,0,0,y)
         card.BackgroundColor3 = Color3.fromRGB(25,25,25)
+        Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
         local label = Instance.new("TextLabel", card)
         label.Size = UDim2.new(0.7,0,1,0)
@@ -228,27 +260,31 @@ task.spawn(function()
         toggle.Size = UDim2.new(0,45,0,22)
         toggle.Position = UDim2.new(1,-60,0.5,-11)
         toggle.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)
 
         local knob = Instance.new("Frame", toggle)
         knob.Size = UDim2.new(0,20,0,20)
         knob.Position = UDim2.new(0,1,0,1)
         knob.BackgroundColor3 = Color3.new(1,1,1)
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(1,0)
 
         local on = false
 
         toggle.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1 then
                 on = not on
-                TweenService:Create(knob, TweenInfo.new(0.2), {
+
+                TweenService:Create(knob, TweenInfo.new(0.25), {
                     Position = on and UDim2.new(1,-21,0,1) or UDim2.new(0,1,0,1)
                 }):Play()
 
-                toggle.BackgroundColor3 = on and Color3.fromRGB(0,255,170) or Color3.fromRGB(50,50,50)
+                TweenService:Create(toggle, TweenInfo.new(0.25), {
+                    BackgroundColor3 = on and Color3.fromRGB(0,255,170) or Color3.fromRGB(50,50,50)
+                }):Play()
             end
         end)
     end
 
-    -- ELEMENTOS
     createToggle(mainTab,"Speed Modifier",20)
     createToggle(mainTab,"Drop Brainrot",80)
 
